@@ -1,0 +1,99 @@
+clc; clear;
+
+[y, fs] = audioread('Sound_clip_2022.wav');
+
+T = 1/ fs;        % sampling period
+L = length(y);    % length of the signal
+f = fs*(0:(L/2))/L;
+  
+
+t = (0: L- 1)* T;
+subplot(8, 1,[1,2] );
+plot(t, y);
+title('original');
+
+Y = fft(y);
+
+P2 = abs(Y/L);%不懂
+P1 = P2(1:L/2+1);
+P1(2:end-1) = 2*P1(2:end-1);
+
+%  subplot(7, 1, 2);
+%  plot(f,P1);
+%  xlim([0, 0.6e4]);
+%  xlabel('f (Hz)');
+%  ylabel('|P1(f)|');
+
+filterOrder = 9;		% Order of filter
+cutOffFreqLow = 500;	% Cutoff frequency
+cutOffFreqHi = 2000;	% Cutoff frequency
+
+[Lb, La]=butter(filterOrder, cutOffFreqLow/(fs/2), 'low');
+[Hb, Ha]=butter(filterOrder, cutOffFreqHi/(fs/2), 'high');
+
+
+% [h, w]=freqz(b, a);
+% LP = abs(h);
+
+% generate low-pass filter
+% LP = ones(length(Y), 1);
+% for i = 7000: length(Y)
+%     LP(i) = 0;
+% end
+% 
+% LP = zeros(length(Y), 1);
+% for i = 1: length(h)
+%     LP(i) = abs(h(i));
+% end
+
+
+
+% for i = (length(h)+1): length(Y)
+%     LP(i) = 0;
+% end
+
+
+% generate band-stop filter
+MP = zeros(length(Y), 1);
+for i = 5000: 20000
+    MP(i) = 1;
+end
+
+% generate high-pass filter
+% HP = zeros(length(Y), 1);
+% for i = 35000: 200000
+%     HP(i) = 1;
+% end
+
+% Piano = Y.* LP;
+% piano = 300*real(ifft(Piano));
+piano = filter(Lb, La, y);
+%subplot(7, 1, 3);
+subplot(8, 1, [3,4]);
+plot(t, piano);
+title('piano');
+
+Man = Y.* MP;
+man = 3*real(ifft(Man));
+subplot(8, 1, [5,6]);
+plot(t, man);
+title('man');
+
+% Violin = Y.* HP;
+% violin = 3*real(ifft(Violin));
+violin = filter(Hb, Ha, y);
+subplot(8, 1, [7, 8]);
+plot(t, violin);
+title('violin');
+
+omega_0 = -1000;
+modulation = exp(1i* omega_0.* t.');
+cello = 1.5* modulation.* violin;
+
+sound(real(cello), fs);
+%sound(y, fs);          % original
+%sound(piano, fs);      % piano
+%sound(man, fs);        % man
+%sound(violin, fs);     % violin
+
+

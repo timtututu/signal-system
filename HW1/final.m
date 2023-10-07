@@ -1,0 +1,413 @@
+clc;
+clear;
+
+%     109030012  卓鈺博
+%     109030015  朱緯騰
+%     109034030  凃光庭
+
+%% Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1Q1
+
+n = -25 : 25;
+
+x1n = exp(1j*(2*pi/3)*n);
+figure(1);
+subplot(4, 1, 1);
+stem(n, x1n, 'filled','diamondr')
+title('x1(n) = exp[j*(2\pi/3)*n]');
+
+x2n = exp(1j*(3*pi/4)*n);
+subplot(4, 1, 2);
+stem(n, x2n, 'filled', 'g')
+title('x2(n) = exp[j*(3\pi/4)*n]');
+
+x3n = exp(1j*(1*pi/2)*n);
+subplot(4, 1, 3);
+stem(n, x3n, 'filled')
+title('x3(n) = exp[j*(\pi/2)*n]');
+
+sumn = x1n + x2n + x3n;
+subplot(4, 1, 4);
+stem(n, sumn)
+title('x1(n)+x2(n)+x3(n)');
+
+%% Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2Q2
+
+n = -10: 10;
+xn = n .* (n >= -2 & n <= 2) + 0 .* (n > 2 & n < -2);
+xn_rev = fliplr(xn);
+
+%找到time reverse後第一個有值的位置
+for counter = 2 : length(n)
+    if xn_rev(1, counter - 1) == 0 && xn_rev(1, counter) ~= 0
+        rev_impulse_start_before_shift = counter;
+        break;
+    end
+end
+
+%標記第一個不為零的位置
+counter = 1;
+while(1)
+    if(xn(1, counter) ~= 0)
+        have_value = counter;
+        break;
+    end
+    counter = counter + 1;
+end
+
+%讓整張圖移到最左側
+while(1)
+    xn_rev = circshift(xn_rev, 1);
+    if(xn_rev(1, (end - 1)) == 0  && xn_rev(1, end) == 0 && xn_rev(1, 1) ~= 0)
+        break;
+    end
+end
+
+% 相乘不為零時停下來
+while(1)
+    xn_rev = circshift(xn_rev, 1);
+
+    if(sum(xn .* xn_rev, 'all') ~= 0)
+        break;
+    end
+end
+
+%找到time reverse後且shifting後第一個有值的位置
+for counter = 2 : length(n)
+    if xn_rev(1, counter - 1) == 0 && xn_rev(1, counter) ~= 0
+        rev_impulse_start_after_shift = counter;
+        break;
+    end
+end
+
+middle = round(length(n) / 2); %找到中點位置
+begin = middle - (rev_impulse_start_before_shift -rev_impulse_start_after_shift); %找到起始作圖位置
+
+autocon = zeros(1, length(n)); %產生零矩陣
+while(1)
+    
+    autocon(1, begin) = sum(xn_rev .* xn, 'all');
+
+    if(autocon(1, begin) == 0)
+        break;
+    end
+
+    begin = begin + 1;
+    xn_rev = circshift(xn_rev, 1);
+
+end
+
+figure(2);
+subplot(2, 1, 1);
+stem(n, xn)
+title('x[n]');
+
+subplot(2, 1, 2);
+stem(n, autocon)
+title('x[n] * x[n]');
+
+%% Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3
+
+step = 0.01; %設定間隔
+t = -10 : step : 10;
+
+x = t .* (t >= 0 & t <= 4) + 0 .* (t > 4 & t < 0);
+figure(3);
+subplot(3, 1, 1);
+plot(t, x)
+title('x(t)');
+
+h = t .^ 3 .* (t >= -1 & t <= 2) + 0 .* (t < -1 & t > 2);
+subplot(3, 1, 2);
+plot(t, h)
+title('h(t)');
+
+h_rev = fliplr(h);
+
+%找到time reverse後第一個有值的位置
+for counter = 2 : length(t)
+    if h_rev(1, counter - 1) == 0 && h_rev(1, counter) ~= 0
+        rev_impulse_start_before_shift = counter;
+        break;
+    end
+end
+
+%標記x第一個不為零的位置
+counter = 1;
+while(1)
+    if(x(1, counter) ~= 0)
+        have_value = counter;
+        break;
+    end
+    counter = counter + 1;
+end
+
+%讓h_rev整張圖移到最左側
+while(1)
+    h_rev = circshift(h_rev, 1);
+    if(h_rev(1, (end - 1)) == 0  && h_rev(1, end) == 0 && h_rev(1, 1) ~= 0)
+        break;
+    end
+end
+
+% 相乘不為零時停下來
+while(1)
+    h_rev = circshift(h_rev, 1);
+
+    if(sum(x .* h_rev, 'all') ~= 0)
+        break;
+    end
+end
+
+%找到time reverse後且shifting後第一個有值的位置
+for counter = 2 : length(t)
+    if h_rev(1, counter - 1) == 0 && h_rev(1, counter) ~= 0
+        rev_impulse_start_after_shift = counter;
+        break;
+    end
+end
+
+middle = round(length(t) / 2); %找到中點位置
+begin = middle - (rev_impulse_start_before_shift -...
+    rev_impulse_start_after_shift); %找到起始作圖位置
+
+
+con = zeros(1, length(t)); %產生零矩陣
+while(1)
+    
+    con(1, begin) = sum(h_rev .* x, 'all');
+
+    if(con(1, begin) == 0)
+        break;
+    end
+
+    begin = begin + 1;
+    h_rev = circshift(h_rev, 1);
+
+end
+
+figure(3);
+subplot(3, 1, 3);
+plot(t, con * step) %將重疊的高度除掉
+title('x(t) * h(t)');
+
+
+%% Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4Q4
+
+step = 0.01;
+t = -10: step: 10;
+
+%causal system!!
+
+%impulse response
+ht = exp(-2*t) .* heaviside(t); 
+figure(4);
+subplot(3, 1, 1);
+plot(t, ht)
+title('h(t)');
+ylim([0 2]);
+
+%% first impulse function
+%impulse function
+delta = 0.5;
+xt = 0 .* (t < 0 & t > delta) + 1 / delta .* (t >= 0 & t <= delta);
+subplot(3, 1, 2);
+plot(t, xt)
+title('x(t), \Delta = 0.5');
+
+xt_rev = fliplr(xt);
+
+%找到time reverse後第一個有值的位置
+for counter = 2 : length(t)
+    if xt_rev(1, counter - 1) == 0 && xt_rev(1, counter) ~= 0
+        rev_impulse_start_before_shift = counter;
+        break;
+    end
+end
+
+%doing convolution
+%標記第一個不為零的位置
+counter = 1;
+while(1)
+    if(ht(1, counter) ~= 0)
+        have_value = counter;
+        break;
+    end
+    counter = counter + 1;
+end
+
+%讓整張圖移到最左側
+while(1)
+    xt_rev = circshift(xt_rev, 1);
+    if(xt_rev(1, (end - 1)) == 0  && xt_rev(1, end) == 0 && xt_rev(1, 1) ~= 0)
+        break;
+    end
+end
+
+% 相乘不為零時停下來
+while(1)
+    xt_rev = circshift(xt_rev, 1);
+
+    if(sum(ht .* xt_rev, 'all') ~= 0)
+        break;
+    end
+end
+
+%找到time reverse後且shifting後第一個有值的位置
+for counter = 2 : length(t)
+    if xt_rev(1, counter - 1) == 0 && xt_rev(1, counter) ~= 0
+        rev_impulse_start_after_shift = counter;
+        break;
+    end
+end
+
+middle = round(length(t) / 2); %找到中點位置
+begin = middle - (rev_impulse_start_before_shift -...
+    rev_impulse_start_after_shift); %找到起始作圖位置
+
+
+con = zeros(1, length(t)); %產生零矩陣
+%disp(length(t));
+
+while(1)
+    
+    con(1, begin) = sum(xt_rev .* ht, 'all');
+
+    if(con(1, begin) < 0.001) %因為不可能真的到0，所以要限定一個最小值
+        break;
+    end
+
+    begin = begin + 1;
+    xt_rev = circshift(xt_rev, 1);
+
+end
+
+figure(5);
+subplot(2, 1, 1);
+plot(t, con * step)
+title('h(t) * x(t), \Delta = 0.5');
+ylim([0 2]);
+set(gca, 'xtick', (-10: 2: 10));
+grid on;
+
+
+%% sencond impulse function
+
+
+%delta getting smaller
+delta = 0.0025;
+xt = 0 .* (t < 0 & t > delta) + 1 / delta .* (t >= 0 & t <= delta);
+figure(4);
+subplot(3, 1, 3);
+plot(t, xt)
+title('x(t), \Delta =', delta);
+
+xt_rev = fliplr(xt);
+
+%找到time reverse後第一個有值的位置
+for counter = 2 : length(t)
+    if xt_rev(1, counter - 1) == 0 && xt_rev(1, counter) ~= 0
+        rev_impulse_start_before_shift = counter;
+        break;
+    end
+end
+
+%doing convolution
+%標記第一個不為零的位置
+counter = 1;
+while(1)
+    if(ht(1, counter) ~= 0)
+        have_value = counter;
+        break;
+    end
+    counter = counter + 1;
+end
+
+%讓整張圖移到最左側
+while(1)
+    xt_rev = circshift(xt_rev, 1);
+    if(xt_rev(1, (end - 1)) == 0  && xt_rev(1, end) == 0 && xt_rev(1, 1) ~= 0)
+        break;
+    end
+end
+
+% 相乘不為零時停下來
+while(1)
+    xt_rev = circshift(xt_rev, 1);
+
+    if(sum(ht .* xt_rev, 'all') ~= 0)
+        break;
+    end
+end
+
+%找到time reverse後且shifting後第一個有值的位置
+for counter = 2 : length(t)
+    if xt_rev(1, counter - 1) == 0 && xt_rev(1, counter) ~= 0
+        rev_impulse_start_after_shift = counter;
+        break;
+    end
+end
+
+middle = round(length(t) / 2); %找到中點位置
+begin = middle - (rev_impulse_start_before_shift -...
+    rev_impulse_start_after_shift); %找到起始作圖位置
+
+
+con = zeros(1, length(t)); %產生零矩陣
+%disp(length(t));
+
+while(1)
+    
+    con(1, begin) = sum(xt_rev .* ht, 'all');
+
+    if(con(1, begin) < 0.001) %因為不可能真的到0，所以要限定一個最小值
+        break;
+    end
+
+    begin = begin + 1;
+    xt_rev = circshift(xt_rev, 1);
+
+end
+
+figure(5);
+subplot(2, 1, 2);
+plot(t, con * delta) % if delta < step
+title('h(t) * x(t), \Delta =', delta);
+ylim([0 2]);
+%set(gca, 'xtick', (-10: 2: 10));
+grid on;
+
+%最後議題邏輯 yTICK? GAC
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
